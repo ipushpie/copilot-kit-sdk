@@ -5,6 +5,7 @@ import {
   CopilotRuntime,
   copilotRuntimeNodeHttpEndpoint,
   ExperimentalOllamaAdapter,
+  GroqAdapter,
 } from "@copilotkit/runtime";
 
 const app = express();
