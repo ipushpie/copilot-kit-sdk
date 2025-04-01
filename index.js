@@ -16,15 +16,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Initialize Groq adapter
+// Initialize Ollama adapter
+// const serviceAdapter = new ExperimentalOllamaAdapter({
+//   model: "llama2:latest",
+// });
+
 const serviceAdapter = new GroqAdapter({
   apiKey: process.env.GROQ_API_KEY,
   model: "llama-3.3-70b-versatile",
 });
-
-// const serviceAdapter = new ExperimentalOllamaAdapter({
-//   model: "llama3.2:latest",
-// });
 
 // Copilot endpoint
 app.use("/copilotkit", (req, res, next) => {
