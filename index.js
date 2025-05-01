@@ -1,58 +1,55 @@
-import "dotenv/config";
 import express from "express";
-import cors from "cors";
 import {
   CopilotRuntime,
+  ServiceAdapter,
   copilotRuntimeNodeHttpEndpoint,
-  ExperimentalOllamaAdapter,
-  GroqAdapter,
 } from "@copilotkit/runtime";
 
+// Custom adapter implementation
+class MyAdapter extends ServiceAdapter {
+  // Handle incoming requests and return a response
+  async handleRequest(req) {
+    // Example logic: return the request body in the response with a message
+    return {
+      message: "Hello from CopilotKit!",
+      data: req.body || {},
+    };
+  }
+
+  // Optional: Invoke specific actions based on the action and parameters
+  async invokeAction(action, params) {
+    if (action === "fetchData") {
+      return { data: "Fetched data successfully!" };
+    }
+
+    // Handle unknown actions
+    return { error: "Unknown action" };
+  }
+}
+
 const app = express();
-const PORT = process.env.PORT || 4000;
 
-// Middleware
-app.use(cors());
+// Initialize the custom adapter
+const serviceAdapter = new MyAdapter();
+
+// Parse JSON bodies
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Initialize Ollama adapter
-// const serviceAdapter = new ExperimentalOllamaAdapter({
-//   model: "llama2:latest",
-// });
-
-const serviceAdapter = new GroqAdapter({
-  apiKey: process.env.GROQ_API_KEY,
-  model: "llama-3.3-70b-versatile",
-});
-
-// Copilot endpoint
+// Set up CopilotKit endpoint
 app.use("/copilotkit", (req, res, next) => {
   (async () => {
-    try {
-      const runtime = new CopilotRuntime();
-      const handler = copilotRuntimeNodeHttpEndpoint({
-        endpoint: "/copilotkit",
-        runtime,
-        serviceAdapter,
-      });
+    const runtime = new CopilotRuntime();
+    const handler = copilotRuntimeNodeHttpEndpoint({
+      endpoint: "/copilotkit",
+      runtime,
+      serviceAdapter,
+    });
 
-      return handler(req, res);
-    } catch (error) {
-      next(error);
-    }
-  })();
+    return handler(req, res);
+  })().catch(next);
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: "Something went wrong!",
-    message: process.env.NODE_ENV === "development" ? err.message : undefined,
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}/copilotkit`);
+// Start the Express server
+app.listen(4000, () => {
+  console.log("Listening at http://localhost:4000/copilotkit");
 });
